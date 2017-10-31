@@ -81,9 +81,14 @@ pred <- predict(fit_rf, newdata = test)
 cm <- confusionMatrix(test$classe,pred)
 cm$table
 cm$overall
-
 ```
 
-The model was highly accuracte on the unseen data, which is a good sign. The 95% confidence interval of accuracy was 99.12-99.63%. Because the out-of-sample error is usually greater than the training error,I would expect the out-of-sample accuracy to be slightly lower on the predictions for the quiz. In other words, I would expect the out-of-sample error (those incorrectly classified) to be at least 1% (meaning an accuracy of at most 99%).
+The model was highly accuracte on the unseen data, with an accuracy of 99.41%. The 95% confidence interval of accuracy was 99.12-99.63%. Furthermore, looking at the cross validation results for the 10 folds in the model, we see the minimum accuracy was 99.10% and the maximum was 99.74% on the original training data. 
+
+```{r}
+fit_rf$resample
+```
+
+Because the out-of-sample error is usually greater than the training error,I would expect the out-of-sample accuracy to be slightly lower on the predictions for the quiz. In other words, I would expect the out-of-sample error (those incorrectly classified) to be at least 1% (meaning an accuracy of at most 99%).
 
 

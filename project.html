@@ -234,7 +234,20 @@ cm$table</code></pre>
 ##      0.9941371      0.9925840      0.9912157      0.9962799      0.2844762 
 ## AccuracyPValue  McnemarPValue 
 ##      0.0000000            NaN</code></pre>
-<p>The model was highly accuracte on the unseen data, which is a good sign. The 95% confidence interval of accuracy was 99.12-99.63%. Because the out-of-sample error is usually greater than the training error,I would expect the out-of-sample accuracy to be slightly lower on the predictions for the quiz. In other words, I would expect the out-of-sample error (those incorrectly classified) to be at least 1% (meaning an accuracy of at most 99%).</p>
+<p>The model was highly accuracte on the unseen data, with an accuracy of 99.41%. The 95% confidence interval of accuracy was 99.12-99.63%. Furthermore, looking at the cross validation results for the 10 folds in the model, we see the minimum accuracy was 99.10% and the maximum was 99.74% on the original training data.</p>
+<pre class="r"><code>fit_rf$resample</code></pre>
+<pre><code>##     Accuracy     Kappa Resample
+## 1  0.9942712 0.9927540   Fold02
+## 2  0.9936306 0.9919422   Fold01
+## 3  0.9923567 0.9903297   Fold04
+## 4  0.9936306 0.9919436   Fold03
+## 5  0.9949045 0.9935552   Fold06
+## 6  0.9974474 0.9967714   Fold05
+## 7  0.9942712 0.9927535   Fold08
+## 8  0.9910771 0.9887106   Fold07
+## 9  0.9929981 0.9911431   Fold10
+## 10 0.9923567 0.9903284   Fold09</code></pre>
+<p>Because the out-of-sample error is usually greater than the training error,I would expect the out-of-sample accuracy to be slightly lower on the predictions for the quiz. In other words, I would expect the out-of-sample error (those incorrectly classified) to be at least 1% (meaning an accuracy of at most 99%).</p>
 </div>
 
 
