@@ -1,0 +1,89 @@
+---
+title: "Predicting Exercise Effectiveness"
+author: "Stuart Cary"
+date: "October 28, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(caret)
+```
+
+## Data Preprocessing
+The first step is to read in the data to take a look at it. 
+
+```{r, eval = FALSE}
+library(caret)
+#load in the training data
+df1 <- read.csv("pml-training.csv",stringsAsFactors = FALSE)
+summary(df1)
+```
+
+I decided to remove the first seven variables because they are not likely to have an effect on the outcome variable. This includes the row number, user name and timestamp/time window information.I also noticed that there are a lot of variables that have missing data, or some numeric variables that came over as strings because of #DIV/0 errors. I converted everything to numeric (except the outcome variable) and kept only variables that had fewer than 90% of the observations missing.
+
+```{r, warning=FALSE}
+df1 <- df1[,-(1:7)]
+df1[,1:152] <- sapply(df1[,1:152],as.numeric)
+df1 <- df1[,apply(df1,2,function(x)(sum(is.na(x))/length(x)))<0.9]
+
+```
+
+This left me with 52 variables (53 including the outcome). I then created a correlation matrix to find any highly correlated variables. There are 7 variables that I determined to be highly correlated, using a cutoff of 0.9. Removing these variables left me with 45 (46 including the outcome).
+
+The last step is to convert the outcome variable to a factor, since this is a classification problem.
+
+```{r}
+corr_matrix<- cor(df1[,-53])
+high_corr <- findCorrelation(corr_matrix)
+df1 <- df1[,-c(high_corr[order(high_corr)])]
+df1$classe <- as.factor(df1$classe)
+
+```
+
+
+## Model Training
+
+Now that the data has been processed we can begin building a model. First we need to partition the data. I opted to do an 80/20 split as it represents a good tradeoff between the amount of training and testing data. I also opted to do 10 fold cross validation to help prevent overfitting. Lastly I set the model evaluation metric to accuracy since this is a classification problem.
+
+```{r}
+set.seed(77)
+inTrain <- createDataPartition(df1$classe,p=0.8,list=FALSE)
+train <- df1[inTrain,]
+test <- df1[-inTrain,]
+
+control <- trainControl(method="cv", number=10)
+metric <- "Accuracy"
+```
+
+I chose to train a few different models to see which might perform best. I trained a linear discriminant, k-nearest neighbor, CART, and random forest. 
+
+```{r, eval=FALSE}
+fit_rf <- train(classe ~ ., data = train, method = "rf", prox=TRUE, metric =metric, trControl = control)
+fit_lda <- train(classe~., data=train, method="lda", metric=metric, trControl=control)
+fit_knn <- train(classe~., data=train, method="knn", metric=metric, trControl=control)
+fit_cart <- train(classe~., data=train, method="rpart", metric=metric, trControl=control)
+
+```
+
+I then ran a summary of the models to see which had the best performance. The random forest and the KNN model had the best performance. 
+
+```{r}
+summary(resamples(list(rf= fit_rf,lda=fit_lda, knn=fit_knn, cart=fit_cart)))
+fit_knn
+fit_rf
+```
+
+In looking at the KNN model, we can see that the accuracy quickly begins to decrease as k increases. Therefore I chose to go with the random forest model because I believe that it will be less likely to overfit on unseen data, and isn't as dependent on a single input. The random forest model's accuracy remains around 99% no matter whether we use a small or large mtry, as seen from the resampling results across tuning parameters. I then used the random forest to generate predictions for my holdout data, and created a confustion matrix of the results. 
+
+```{r}
+pred <- predict(fit_rf, newdata = test)
+cm <- confusionMatrix(test$classe,pred)
+cm$table
+cm$overall
+
+```
+
+The model was highly accuracte on the unseen data, which is a good sign. The 95% confidence interval of accuracy was 99.12-99.63%. Because the out-of-sample error is usually greater than the training error,I would expect the out-of-sample accuracy to be slightly lower on the predictions for the quiz. In other words, I would expect the out-of-sample error (those incorrectly classified) to be at least 1% (meaning an accuracy of at most 99%).
+
+
